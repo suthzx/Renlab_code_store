@@ -1,0 +1,55 @@
+chushi:
+  SYSTEM = 11O
+  ISTART = 1
+  ICHARG = 1
+  ENCUT = 666
+  PREC = Accurate
+  LREAL = .False.
+  ALGO = Normal
+  #ISYM = 0
+  #LORBIT = 11
+
+
+lizi:
+  IBRION = 1
+  POTIM = 0.1
+  ISIF = 7
+  NSW = 200
+  EDIFFG = 1e-3
+
+dianzi:
+  #ISPIN = 2
+  #MAGMOM = 16*0 8*0 8*1
+  NELM = 120
+  NELMIN = 5
+  LASPH = TRUE
+  ADDGRID = TRUE
+  LCHARG = .FALSE.
+  LWAVE = .FALSE.
+  ISMEAR = 0
+  SIGMA = 0.05
+  EDIFF = 1E-7
+
++u:
+  #LDAU = .T.
+  #LDAUTYPE = 2
+  #LDAUL = -1 2 -1
+  #LDAUU = 0 4.3 0
+  #LDAUJ = 0 0.3 0
+  #LMAXMIX = 4
+
+dos:
+  #NBANDS = EIGENVAL
+  #LORBIT = 11
+  #EMIX = -16
+  #EMAX = 16
+  #NEDOS = 1000
+
+zahua£º
+  #LHFCALC = .TURE.
+  #HFSCREEN = 0.2       #None=PBE0 0.2=HSE06 0.3=HSE03
+  #PREC = Accurate
+  #LMAXFOCK = 4
+  #ALGO = Damped
+  #TIME = 0.4
+  #PRECFOCK = Normal/Fast

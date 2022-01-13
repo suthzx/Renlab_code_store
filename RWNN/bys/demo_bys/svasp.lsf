@@ -1,0 +1,97 @@
+#!/bin/bash
+#BSUB -q normal
+#BSUB -o out.%J.txt
+#BSUB -e error.%J.txt
+#BSUB -J bys_RWcs
+#BSUB -n 24
+##BSUB -R "span[ptile=16]"
+#BSUB -R "span[hosts=1]"
+
+#source /share/apps/intel/ipsxe2016/parallel_studio_xe_2016.0.047/psxevars.sh >/dev/null 2>&1
+source /share/apps/intel/ipsxe2015u5/parallel_studio_xe_2015/psxevars.sh >/dev/null 2>&1
+
+
+#Run MultiTheads per MPI Process
+#-genv  OMP_NUM_THREADS 1
+export OMP_NUM_THREADS=1
+
+#Run MPI over infiniband
+#mpirun -genv I_MPI_FABRICS tmi -bootsyrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp
+
+#Run MPI within one Compute Note;
+
+
+##############mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result
+
+
+
+vaspkit -task 102
+wait
+vaspkit -task 103
+wait
+cp INCAR03 INCAR
+mkdir {01_relax,02_scf,03_dos,04_bands,05_becs,06_ela,07_phonopy}
+mkdir 01_relax/{01_do,02_copy}
+cp INCAR KPOINTS POSCAR POTCAR 01_relax/01_do/
+cd 01_relax/01_do/
+cp ../../INCAR01 INCAR
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result1
+wait
+mv CONTCAR POSCAR
+wait
+cp ../../INCAR02 INCAR
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result2
+wait
+mv CONTCAR POSCAR
+wait
+python ../../loop.py > loopdata
+loop=$(cat loopdata)
+i=1
+while (($i<=3)) && (($loop>10))
+do 
+i=`expr $i + 1`
+cp ../../INCAR01 INCAR
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result1
+wait
+mv CONTCAR POSCAR
+wait
+cp ../../INCAR02 INCAR
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result2
+wait
+mv CONTCAR POSCAR
+wait
+python ../../loop.py >> loopdata
+loop=$(tail -n 1 loopdata)
+echo $i > loop_indx
+done
+######
+
+cp ../../INCAR03 INCAR
+
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result3
+wait
+python ../../loop.py >> loopdata
+wait
+
+########conda activate pyxtal
+
+cp CONTCAR INCAR KPOINTS POSCAR POTCAR  ../02_copy/
+cp CONTCAR INCAR KPOINTS POSCAR POTCAR ../../02_scf/
+cd ../../02_scf/
+mv CONTCAR POSCAR
+####sed -i "s/4/8/g" KPOINTS  ####在这里写自洽和优化不同的INCAR参数
+sed -i "s/^.*\\bISTART\\b.*$/ ISTART = 0/" INCAR
+sed -i "s/^.*\\bICHARG\\b.*$/ ICHARG = 2/" INCAR
+sed -i "s/^.*\\bLWAVE\\b.*$/ LWAVE  = .TRUE./" INCAR
+sed -i "s/^.*\\bLCHARG\\b.*$/ LCHARG = .TRUE./" INCAR
+sed -i "s/^.*\\bNSW\\b.*$/ NSW    = 0/" INCAR
+sed -i "s/^.*\\bIBRION\\b.*$/ IBRION = -1/" INCAR
+sed -i "s/^.*\\bISIF\\b.*$/ ISIF   = 2/" INCAR
+sed -i "/LCHARG/ a\ LORBIT = 11" INCAR
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result
+wait
+touch already_scf
+wait
+python ../ener_per.py > ../enerlog
+python ../ener_per.py > ../02_scf/enerlog
+wait

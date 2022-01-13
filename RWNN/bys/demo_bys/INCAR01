@@ -1,0 +1,18 @@
+SYSTEM = RW_1
+PREC = Normal
+EDIFF = 1e-5
+EDIFFG = 1e-3
+IBRION = 2
+
+###SYMPREC=1e-4
+ISIF = 7
+KSPACING=0.8
+NSW = 60
+NELM = 120
+ISMEAR = 0 ; SIGMA = 0.05
+POTIM = 0.1
+#Wavefunction and charge
+ISTART = 0
+LWAVE = FALSE
+LCHARG = FALSE
+
