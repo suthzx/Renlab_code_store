@@ -1,0 +1,44 @@
+#!/bin/bash
+#BSUB -q normal
+#BSUB -o out.%J.txt
+#BSUB -e error.%J.txt
+#BSUB -J RWcs
+#BSUB -n 16
+##BSUB -R "span[ptile=16]"
+#BSUB -R "span[hosts=1]"
+
+#source /share/apps/intel/ipsxe2016/parallel_studio_xe_2016.0.047/psxevars.sh >/dev/null 2>&1
+source /share/apps/intel/ipsxe2015u5/parallel_studio_xe_2015/psxevars.sh >/dev/null 2>&1
+
+
+#Run MultiTheads per MPI Process
+#-genv  OMP_NUM_THREADS 1
+export OMP_NUM_THREADS=1
+
+#Run MPI over infiniband
+#mpirun -genv I_MPI_FABRICS tmi -bootsyrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp
+
+#Run MPI within one Compute Note;
+
+
+##############mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result
+
+
+mkdir {01_relax,02_scf}
+mkdir 01_relax/{01_do,02_copy}
+cp KPOINTS POSCAR POTCAR 01_relax/01_do/
+cd 01_relax/01_do/
+
+cp ../../INCAR_opt INCAR
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result
+wait
+
+cp CONTCAR INCAR KPOINTS POSCAR POTCAR  ../02_copy/
+cp CONTCAR  KPOINTS POSCAR POTCAR ../../02_scf/
+cd ../../02_scf/
+cp ../INCAR_scf INCAR
+mv CONTCAR POSCAR
+
+mpirun -genv I_MPI_FABRICS shm -bootstrap lsf /share/apps/vasp.5.3.3.intel2015u5/vasp.5.3/vasp>result
+wait
+touch already_scf
