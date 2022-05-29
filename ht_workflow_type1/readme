@@ -1,7 +1,8 @@
 Quick Use  
 thsu0407@gmail.com  
   
-
+`使用顺序`：  
+`1`.安装kkr软件和必要的python3环境    
 `1.` unzip the baseline.zip  
 2.Place the calculation files in the Structure folder  
 3.Modify calculation parameters in the Demo folder  
