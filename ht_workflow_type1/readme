@@ -3,4 +3,5 @@ Quick Use
 1.unzip the baseline.zip  
 2.Place the calculation files in the Structure folder  
 3.Modify calculation parameters in the Demo folder  
-4.Modify the .LSF commit script based on the server configuration
+4.Modify the .LSF commit script based on the server configuration  
+5.nohup python wf.py >log&
