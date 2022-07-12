@@ -5,7 +5,7 @@ submission_structure="./structure"
 submission_stdfile="./demo"
 submission_catalogue="./computing_directory"
 #submission_logfile="./submission_log"
-node_number = 3
+
 
 if not os.path.isdir(submission_catalogue):
     os.mkdir(submission_catalogue)
@@ -22,19 +22,11 @@ def submit(submit_dir):   ##告知要提交计算的目录，提交并记录
     mine = os.getcwd() # 记录当前位置
     os.chdir(mine) # 回到自己目录 确保安全
     os.chdir(submit_dir) # 进入计算目录
-    os.system('bsub< submit.lsf')   ## 和提交排队系统的指令要一致,提交脚本命名为submit.lsf
+    os.system('sbatch  submit.lsf')   ## 和提交排队系统的指令要一致,提交脚本命名为submit.lsf
     os.chdir(mine) # 回到自己目录 确保安全
     oname = "./cac.log"
     with open(oname, 'a') as t:
         print(f"submit the {submit_dir} stat 1",file=t)    ## 提示开始计算了 状态为1 占着节点
-        #print(int(0),file=t)
-        #print('Submission submitted', submit_dir,file=submission.submission_logfile)
-    #while abs(vaspdone)<1:
-    #    if os.path.isfile(f'{submit_dir}/already_done'):  ## 脚本里要注意 计算完最后touch一个标记done文件
-    #        print(f"{submit_dir} is done")
-    #        vaspdone = 1
-    #with open(oname, 'a') as t:
-    #    print(f"submit the {submit_dir} stat -1",file=t)    ## 提示计算结束了 状态为-1 不占节点
 
 
 def high_throughput(submission_structure):   ##单节点 作为多节点的baseline
@@ -50,38 +42,34 @@ def high_throughput(submission_structure):   ##单节点 作为多节点的basel
 
 def get_node_info(path):
     num = 0
-    all_cac = len(os.listdir(path))  ##一共提交过
+    all_cac = len(os.listdir(path))  ##一共提交过的
     for _ in os.listdir(path):
         if os.path.isfile(path+f'/{_}/already_done'):  ## 脚本里要注意 计算完最后touch一个标记done文件
-    #        print(f"{submit_dir} is done")
             num += 1
-            #with open(oname, 'a') as t:
-            #    print(f"submit the {submit_dir} stat -1",file=t)    ## 提示计算结束了 状态为-1 不占节点
         else:
             runing = "./runing.log"
             with open(runing, 'w') as run:
                 print(f"{_} is not done",file=run)
     run_node = all_cac - num
-    #htm = open("./cac.log",'r')
-    #nodelist = [int(c.split()[-1) for c in htm.readlines()
-    #run_node = sum(nodelist)
     return run_node
 
 def mut_high_throughput_monitor(node_number):  ##多节点
     errlog = "./mhv_err.log"
-    cacing = [
-    _ = os.listdir(submission_structure)[0
+    cacing = []
+    _ = os.listdir(submission_structure)[0]
     std_process(_)
     time.sleep(1)
     submit(f'{submission_catalogue}/{_}')
     cacing.append(_)
     time.sleep(1)
-    cac_list = os.listdir(submission_structure)[1:  ##要计算的poscar的总的集合
-   # time.sleep(1)
-   
+    cac_list = os.listdir(submission_structure)[1:]  ##要计算的poscar的总的集合
+    time.sleep(1)
     while True:
             run_node = get_node_info(path = submission_catalogue)
+           # print("now run node is",run_node)
             if run_node < node_number:
+                run_node = get_node_info(path = submission_catalogue)
+                print("now run node is",run_node)
                 for i in (cac_list):
                     try:
                         std_process(i)
@@ -89,10 +77,12 @@ def mut_high_throughput_monitor(node_number):  ##多节点
                         submit(f'{submission_catalogue}/{i}')
                         cac_list.remove(i)
                         cacing.append(i)
+                        break
                     except Exception:
                         print("std_p err")
                         with open(errlog, 'a') as t:
                             print(f"{i} is not done",file=t)
+                    
            # time.sleep(1)   ## 每隔30秒看一眼
-
-mut_high_throughput_monitor(5)
+node_number = 10
+mut_high_throughput_monitor(node_number=node_number)
